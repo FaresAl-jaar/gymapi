@@ -9,7 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Data Source=gymapi.db";
+    ?? "Data Source=/app/data/gym.db";
+
 builder.Services.AddDbContext<GymDbContext>(options =>
     options.UseSqlite(connectionString));
 
@@ -41,8 +42,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Controllers
 builder.Services.AddControllers();
 
-// Swagger/OpenAPI
-builder.Services.AddOpenApi();
+// Swagger/OpenAPI - .NET 9.0 compatible
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -64,18 +66,20 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-// OpenAPI/Swagger
-app.MapOpenApi();
+// Swagger UI - .NET 9.0 compatible
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 // Health check endpoint
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy", timestamp = DateTime.UtcNow }));
 
 app.Run();
-
